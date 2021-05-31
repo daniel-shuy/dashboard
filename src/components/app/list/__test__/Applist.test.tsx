@@ -4,7 +4,7 @@ import renderer from 'react-test-renderer';
 import ExternalListContainer from '../ExternalListContainer';
 import AppListContainer from '../AppListContainer';
 import { Filter } from '../../../common';
-import { render, cleanup, fireEvent, screen } from '@testing-library/react';
+import { render, cleanup, fireEvent, screen, queryByPlaceholderText } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 
 afterEach(() => cleanup());
@@ -18,13 +18,29 @@ it('applist renders without crashing matches snapshot', () => {
     expect(appList).toMatchSnapshot();
 });
 
-it("should render app list", () => {
-    render(<BrowserRouter>
-        <AppListContainer />
-    </BrowserRouter>);
+it("render search correctly", ()=>{
+    const { queryByPlaceholderText } = render(<BrowserRouter><AppListContainer /></BrowserRouter>)
+    expect(queryByPlaceholderText("Search apps")).toBeTruthy()
+})
+
+it("should render list", () => {
+    render(<BrowserRouter><AppListContainer /></BrowserRouter>);
     const loaderEl = screen.getByTestId("applist-loading")
     expect(loaderEl).toBeInTheDocument();
 });
+
+describe("input value", () => {
+  it("update search while changing value", () => {
+    const { queryByPlaceholderText } = render(<BrowserRouter><AppListContainer /></BrowserRouter>)
+    const searchInput = queryByPlaceholderText("Search apps")
+    fireEvent.change(searchInput, {
+        target: {
+            value: "testing"
+        }
+    })
+    expect(searchInput["value"]).toBe("testing")
+  })
+})
 
 it('render filter successfull', () => {
     const mockApplyFilter = jest.fn();
@@ -71,13 +87,7 @@ it('render app list successfull: apply status filter ', () => {
 
 it('render app list successfull: apply status filter ', () => {
     const mockApplyFilter = jest.fn();
-    const { getByTestId } = render(
-        <BrowserRouter>
-            <AppListContainer />
-
-        </BrowserRouter>
-    );
+    const { getByTestId } = render(<BrowserRouter><AppListContainer /></BrowserRouter>);
     // let statusEl = getByTestId('environment-filter')
-    // expect(statusEl).toBe("Environment: All")
+    expect(mockApplyFilter).not.toHaveBeenCalled();
 })
-
