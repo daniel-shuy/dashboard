@@ -7,6 +7,8 @@ import { Filter } from '../../../common';
 import { render, cleanup, fireEvent, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 
+afterEach(() => cleanup());
+
 it('applist renders without crashing', () => {
     const appList = renderer.create(
         <BrowserRouter>
@@ -16,11 +18,12 @@ it('applist renders without crashing', () => {
     expect(appList).toMatchSnapshot();
 });
 
-it("render app list", () => {
+it("should render app list", () => {
     render(<BrowserRouter>
         <AppListContainer />
     </BrowserRouter>);
-    expect(screen.getByTestId("applist-loading")).toBeInTheDocument();
+    const loaderEl = screen.getByTestId("applist-loading")
+    expect(loaderEl).toBeInTheDocument();
 });
 
 it('render filter successfull', () => {
