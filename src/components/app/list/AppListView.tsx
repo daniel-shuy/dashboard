@@ -99,6 +99,7 @@ export class AppListView extends Component<AppListViewProps>{
                 </form>
                 <div className="filters">
                     <Filter list={this.props.filters.environment}
+                    data-test-id="environment-filter"
                         labelKey="label"
                         buttonText="Environment: "
                         searchable multi

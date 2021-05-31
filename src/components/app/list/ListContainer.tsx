@@ -7,12 +7,13 @@ import { URLS } from '../../../config';
 import { AddNewApp } from '../create/CreateApp';
 import { ReactComponent as Add } from '../../../assets/icons/ic-add.svg';
 import './list.css';
+import { withRouter } from 'react-router-dom';
 
 const APP_LIST_PARAM = {
     createApp: 'create-app',
 }
 
-export default class ListContainer extends Component<ListContainerProps, {}> {
+ class ListContainer extends Component<ListContainerProps, {}> {
     constructor(props) {
         super(props);
 
@@ -59,7 +60,7 @@ export default class ListContainer extends Component<ListContainerProps, {}> {
                 <NavLink activeClassName="active" to={`${URLS.EXTERNAL_APP}`} className="tab-list__tab-link">External Apps [E]</NavLink>
             </li>
             <li className="tab-list__tab--right mt-9 mb-9 mr-20">
-                <button type="button" className="cta h-30" onClick={this.openCreateModal}>
+                <button type="button" data-testid = "new-app-btn" className="cta h-30" onClick={this.openCreateModal}>
                     <Add className="" />New app
                 </button>
             </li>
@@ -85,3 +86,5 @@ export default class ListContainer extends Component<ListContainerProps, {}> {
         </div>
     }
 }
+
+export default withRouter(ListContainer)
