@@ -19,19 +19,28 @@ it('applist renders without crashing matches snapshot', () => {
 });
 
 it("render search correctly", () => {
-    const { queryByPlaceholderText } = render(<BrowserRouter><AppListContainer /></BrowserRouter>)
+    const { queryByPlaceholderText } = render(
+        <BrowserRouter>
+            <AppListContainer />
+        </BrowserRouter>)
     expect(queryByPlaceholderText("Search apps")).toBeTruthy()
 })
 
 it("should render list", () => {
-    render(<BrowserRouter><AppListContainer /></BrowserRouter>);
+    render(
+        <BrowserRouter>
+            <AppListContainer />
+        </BrowserRouter>);
     const loaderEl = screen.getByTestId("applist-loading")
     expect(loaderEl).toBeInTheDocument();
 });
 
 describe("input value", () => {
     it("update search while changing value", () => {
-        const { queryByPlaceholderText } = render(<BrowserRouter><AppListContainer /></BrowserRouter>)
+        const { queryByPlaceholderText } = render(
+            <BrowserRouter>
+                <AppListContainer />
+            </BrowserRouter>)
         const searchInput = queryByPlaceholderText("Search apps")
         fireEvent.change(searchInput, {
             target: {
@@ -82,13 +91,13 @@ it('render app list successfull: apply filter in status', () => {
     const mockApplyFilter = jest.fn();
     const { queryByTestId } = render(
         <Filter list={[{ key: 1, label: 'devtron', isSaved: false, isChecked: false }]}
-        labelKey="label"
-        buttonText="Status: "
-        searchable multi
-        placeholder="Status: All"
-        type={"status"}
-        applyFilter={mockApplyFilter}
-    />
+            labelKey="label"
+            buttonText="Status: "
+            searchable multi
+            placeholder="Status: All"
+            type={"status"}
+            applyFilter={mockApplyFilter}
+        />
     );
     let btn = queryByTestId('apply-filter-status')
     fireEvent.click(btn)
@@ -99,13 +108,13 @@ it('render app list successfull: apply filter in project', () => {
     const mockApplyFilter = jest.fn();
     const { queryByTestId } = render(
         <Filter list={[{ key: 1, label: 'devtron', isSaved: false, isChecked: false }]}
-        labelKey="label"
-        buttonText="Project: "
-        searchable multi
-        placeholder="Project: All"
-        type={"team"}
-        applyFilter={mockApplyFilter}
-    />
+            labelKey="label"
+            buttonText="Project: "
+            searchable multi
+            placeholder="Project: All"
+            type={"team"}
+            applyFilter={mockApplyFilter}
+        />
     );
     let btn = queryByTestId('apply-filter-team')
     fireEvent.click(btn)
