@@ -55,17 +55,22 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
     }
 
     handleAppname(event: React.ChangeEvent<HTMLInputElement>): void {
-        let { form, isValid } = { ...this.state };
-        form.appName = event.target.value;
-        isValid.appName = this.rules.appName(event.target.value).isValid;
-        this.setState({ form, isValid });
+        this.state.form.appName = event.target.value;
+        this.state.isValid.appName = this.rules.appName(event.target.value).isValid;
+        this.setState({
+            form: this.state.form,
+            isValid: this.state.isValid
+        });
     }
 
     handleProject(item: number, appId): void {
         let { form, isValid } = { ...this.state };
-        form.projectId = item;
-        isValid.projectId = !!item;
-        this.setState({ form, isValid });
+        this.state.form.projectId = item;
+        this.state.isValid.projectId = !!item;
+        this.setState({
+            form: this.state.form,
+            isValid: this.state.isValid
+        });
     }
 
     createApp(): void {
