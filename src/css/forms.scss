@@ -61,7 +61,8 @@
     letter-spacing: -0.1px;
     display: flex;
     margin-bottom: 4px;
-    margin-top: 4px
+    margin-top: 4px;
+    display: block;
 }
 
 .form__label {
@@ -135,7 +136,6 @@ p.sentence-case:first-letter {
     margin-right: 5px;
     vertical-align: middle;
     position: relative;
-    top: 2px;
 }
 
 .form__icon--error path[fill="#FFCB5D"] {

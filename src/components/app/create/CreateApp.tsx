@@ -161,7 +161,9 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
                         placeholder="e.g. my-first-app" autoComplete="off" autoFocus={true} tabIndex={1} onChange={this.handleAppname} required />
                     <span className="form__error">
                         {showError && !this.state.isValid.appName
-                            ? <><Error className="form__icon form__icon--error" />{errorObject[0].message} <br /></>
+                            ? <>{errorObject[0].error.map((err) => {
+                                return <div><Error className="form__icon form__icon--error" />{err}</div>
+                            })}</>
                             : null}
                     </span>
                     <span className="form__text-field-info form__text-field-info--create-app">
@@ -181,7 +183,7 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
                     </Select>
                     <span className="form__error">
                         {showError && !this.state.isValid.projectId
-                            ? <><Error className="form__icon form__icon--error" />{errorObject[1].message}</>
+                            ? <><Error className="form__icon form__icon--error" />{errorObject[1].error}</>
                             : null}
                     </span>
                 </div>
