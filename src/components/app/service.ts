@@ -7,7 +7,6 @@ import { ServerErrors } from '../../modals/commonTypes';
 import { History } from './details/cIDetails/types'
 import { AppDetails } from './types';
 import { CDMdalTabType } from './details/triggerView/types'
-import yamlJsParser from 'yaml';
 import {AppMetaInfo} from './types';
 
 let stageMap = {
