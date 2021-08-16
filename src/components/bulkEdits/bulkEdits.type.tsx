@@ -81,7 +81,7 @@ export interface DTBulkOutput {
     message: string[];
     failure: DtOutputKeys[];
     successful: DtOutputKeys[];
- }
+}
 
 export interface CMandSecretBulkOutput {
     message: string[];
@@ -122,4 +122,3 @@ export interface OutputTabType {
 export interface BulkEditsProps extends RouteComponentProps<{}> {
     // close: (event) => void;
 }
-
