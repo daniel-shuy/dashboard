@@ -1,9 +1,9 @@
-import React, { lazy, Suspense, useCallback, useRef, useEffect } from 'react';
+import React, { lazy, Suspense, useCallback, useRef, useEffect, useState } from 'react';
 import { Switch, Route, Redirect, NavLink } from 'react-router-dom';
-import { ErrorBoundary, Progressing, BreadCrumb, useBreadcrumb, useAsync, showError } from '../../common';
+import { ErrorBoundary, Progressing, BreadCrumb, useBreadcrumb, useAsync, showError, ClearIndicator, MultiValueRemove, VisibleModal, } from '../../common';
 import { getAppListMin } from '../../../services/service';
 import { useParams, useRouteMatch, useHistory, generatePath, useLocation } from 'react-router'
-import { URLS } from '../../../config';
+import { URLS, Moment12HourFormat } from '../../../config';
 import AppSelector from '../../AppSelector'
 import ReactGA from 'react-ga';
 import { ReactComponent as Settings } from '../../../assets/icons/ic-settings.svg';
@@ -12,7 +12,11 @@ import './appDetails/appDetails.scss';
 import './app.css';
 import { ReactComponent as Info } from '../../../assets/icons/ic-info-outlined.svg';
 import Tippy from '@tippyjs/react';
-import { fetchAppMetaInfo } from '../service';
+import { fetchAppMetaInfo, createAppLabels } from '../service';
+import { ReactComponent as Close } from '../../../assets/icons/ic-close.svg';
+import moment from 'moment'
+import { toast } from 'react-toastify';
+import TagLabelSelect from './TagLabelSelect';
 
 const TriggerView = lazy(() => import('./triggerView/TriggerView'));
 const DeploymentMetrics = lazy(() => import('./metrics/DeploymentMetrics'));
@@ -50,6 +54,11 @@ export default function AppDetailsPage() {
     </div>
 }
 
+interface OptionType {
+    label: string;
+    value: string;
+}
+
 export function AppHeader() {
     const { appId } = useParams<{ appId }>();
     const match = useRouteMatch();
@@ -57,6 +66,63 @@ export function AppHeader() {
     const location = useLocation();
     const currentPathname = useRef("");
     const [loading, result, error, reload] = useAsync(() => fetchAppMetaInfo(appId))
+    const [showInfoModal, setShowModal] = useState(false)
+    const [labelTags, setLabelTags] = useState<{ tags: OptionType[], inputTagValue: string, tagError: string }>({ tags: [], inputTagValue: '', tagError: '' })
+    const [submitting, setSubmitting] = useState(false)
+
+
+    useEffect(() => {
+        // setLabelTags({ tags: [{ label: id, value: id }], inputTagValue: '', tagError: '' })
+    })
+
+    function validateTags(tag) {
+        var re = /^.+:.+$/;
+        const result = re.test(String(tag).toLowerCase());
+        return result;
+    }
+
+    function validateForm(): boolean {
+        if (labelTags.tags.length !== labelTags.tags.map(tag => tag.value).filter(tag => validateTags(tag)).length) {
+            setLabelTags(labelTags => ({ ...labelTags, tagError: 'Please provide tags in key:value format only' }))
+            return false
+        }
+        return true
+    }
+
+    async function handleSubmit(e) {
+        const validForm = validateForm()
+        if (!validForm) {
+            return
+        }
+        setSubmitting(true)
+
+        let _optionTypes = [];
+        if (labelTags.tags && labelTags.tags.length > 0) {
+            labelTags.tags.forEach((_label) => {
+                _optionTypes.push({
+                    key: _label.value,
+                    value: _label.label
+                })
+            })
+        }
+
+        const payload = {
+            appId: 0,
+            labels: _optionTypes
+        }
+        
+        try {
+            const { result } = await createAppLabels(payload)
+            await reload()
+            toast.success('Successfully saved.')
+        }
+        catch (err) {
+            showError(err)
+        }
+        finally {
+            setSubmitting(false)
+        }
+    }
 
     useEffect(() => {
         currentPathname.current = location.pathname
@@ -101,10 +167,45 @@ export function AppHeader() {
     return <div className="page-header" style={{ gridTemplateColumns: "unset" }}>
         <h1 className="m-0 fw-6 flex left fs-18 cn-9">
             <BreadCrumb breadcrumbs={breadcrumbs} />
-            <Tippy className="default-tt" arrow={false} content={result?.result.projectName}>
+            <div className="tab-list__info-icon ml-4" onClick={() => setShowModal(true)}><Info className="icon-dim-20 fcn-5" /></div>
+            {/* <Tippy className="default-tt" arrow={false} content={result?.result.projectName}>
                 <Info className="icon-dim-20 fcn-5" />
-            </Tippy>
+            </Tippy> */}
+            {showInfoModal &&
+                <VisibleModal className="app-status__material-modal">
+                    <form >
+                        <div className="modal__body  br-4 bcn-0 p-20">
+                            <div className="modal__header">
+                                <div className="fs-20 cn-9 fw-6 box-shadow">About</div>
+                                <button className="transparent" onClick={() => setShowModal(false)}>
+                                    <Close className="icon-dim-24 cursor" />
+                                </button>
+                            </div>
+                            <div className="pt-12">
+                                <div className="cn-6 fs-12 mb-2">App name</div>
+                                <div className="cn-9 fs-14 mb-16">{result.result.appName}</div>
+                            </div>
+                            <div>
+                                <div className="cn-6 fs-12 mb-2">Created on</div>
+                                <div className="cn-9 fs-14 mb-16">{moment(result.result.createdOn).format(Moment12HourFormat)}</div>
+                            </div>
+                            <div>
+                                <div className="cn-6 fs-12 mb-2">Created by</div>
+                                <div className="cn-9 fs-14 mb-16">{result.result.createdBy}</div>
+                            </div>
+                            <div>
+                                <div className="cn-6 fs-12 mb-2">Project</div>
+                                <div className="cn-9 fs-14 mb-16">{result.result.projectName}</div>
+                            </div>
+                            <TagLabelSelect validateTags={validateTags} labelTags={labelTags} setLabelTags={setLabelTags} />
+                            <div className='form__buttons mt-40'>
+                                <button className=' cta' type="submit" disabled={submitting} onClick={(e) => { e.preventDefault(); handleSubmit(e) }} tabIndex={5} > Save </button>
+                            </div>
+                        </div>
+                    </form>
+                </VisibleModal>}
         </h1>
+
         <ul role="tablist" className="tab-list">
             <li className="tab-list__tab ellipsis-right">
                 <NavLink activeClassName="active" to={`${match.url}/${URLS.APP_DETAILS}`} className="tab-list__tab-link"
