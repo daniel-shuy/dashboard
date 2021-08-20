@@ -60,4 +60,3 @@ export default function TagLabelSelect({ validateTags, labelTags, onInputChange,
         </div>
     )
 }
-
