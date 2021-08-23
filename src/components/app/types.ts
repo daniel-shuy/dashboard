@@ -5,7 +5,7 @@ export interface AddNewAppProps extends RouteComponentProps<{}> {
     close: () => void;
 }
 
-interface OptionType {
+export interface OptionType {
     label: string;
     value: string;
 }
@@ -28,13 +28,11 @@ export interface AddNewAppState {
         appId: number;
         projectId: number;
         cloneId: number;
-        labels: []
     };
     labels: LabelTags;
     isValid: {
         projectId: boolean;
         appName: boolean;
-        appTag: boolean;
     };
 }
 

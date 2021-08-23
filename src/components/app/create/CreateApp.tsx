@@ -7,10 +7,11 @@ import { getTeamListMin, getAppListMin } from '../../../services/service';
 import { createApp } from './service';
 import { toast } from 'react-toastify';
 import { ServerErrors } from '../../../modals/commonTypes';
+import './createApp.css';
+import { TAG_VALIDATION_MESSAGE, validateTags } from '../appLabelCommon'
+import TagLabelSelect from '../details/TagLabelSelect';
 import { ReactComponent as Error } from '../../../assets/icons/ic-warning.svg';
 import { ReactComponent as Info } from '../../../assets/icons/ic-info-filled.svg';
-import './createApp.css';
-import TagLabelSelect from '../details/TagLabelSelect';
 
 export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
     rules = new ValidationRules();
@@ -29,7 +30,6 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
                 projectId: 0,
                 appName: "",
                 cloneId: 0,
-                labels: []
             },
             labels: {
                 tags: [],
@@ -39,7 +39,6 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
             isValid: {
                 projectId: false,
                 appName: false,
-                appTag: true
             }
         }
         this.createApp = this.createApp.bind(this);
@@ -61,20 +60,10 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
         }
     }
 
-    validateTags = (tag) => {
-        if(!tag){
-            return true
-        }
-        var re = /^.+:.+$/;
-        const result = re.test(String(tag).toLowerCase());
-        return result;
-    }
-
     handleInputChange = (inputTagValue) => {
         let { form, isValid } = { ...this.state };
-        isValid.appTag = !!this.validateTags(inputTagValue);
-        this.setState({ form, isValid });
-        this.setState({
+        // this.setState({ form, isValid });
+        this.setState({form, isValid,
             labels: {
                 ...this.state.labels,
                 inputTagValue: inputTagValue,
@@ -150,11 +139,11 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
     }
 
     validateForm = (): boolean => {
-        if (this.state.labels.tags.length !== this.state.labels.tags.map(tag => tag.value).filter(tag => this.validateTags(tag)).length) {
+        if (this.state.labels.tags.length !== this.state.labels.tags.map(tag => tag.value).filter(tag => validateTags(tag)).length) {
             this.setState({
                 labels: {
                     ...this.state.labels,
-                    tagError: 'Please provide tags in key:value format only'
+                    tagError: TAG_VALIDATION_MESSAGE.error
                 }
             })
             return false
@@ -194,16 +183,20 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
         }
         this.setState({ disableForm: true });
         createApp(request).then((response) => {
-
             if (response.result) {
                 let { form, isValid } = { ...this.state };
                 form.appId = response.result.id;
                 form.appName = response.result.appName;
-                form.labels = response.result.labels.tags;
                 isValid.appName = true;
                 isValid.projectId = true;
-                isValid.appTag = true;
-                this.setState({ code: response.code, form, isValid, disableForm: false, showErrors: false }, () => {
+                this.setState({
+                    code: response.code, form, isValid, disableForm: false, showErrors: false,
+                    labels: {
+                        ...this.state.labels,
+                        tags: response.result?.labels?.tags
+                    }
+
+                }, () => {
                     toast.success('Your application is created. Go ahead and set it up.');
                     this.redirectToArtifacts(this.state.form.appId);
                 })
@@ -230,9 +223,7 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
     }
 
     render() {
-        let errorObject = [this.rules.appName(this.state.form.appName), this.rules.team(this.state.form.projectId),
-        this.rules.appTag(this.state.labels.tags.map(tag => tag.value).filter(tag => this.validateTags(tag)).length)
-        ];
+        let errorObject = [this.rules.appName(this.state.form.appName), this.rules.team(this.state.form.projectId)]
         let showError = this.state.showErrors;
         let provider = this.state.projects.find(project => this.state.form.projectId === project.id);
         let clone = this.state.apps.find(app => this.state.form.cloneId === app.id);
@@ -259,7 +250,6 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
             </DialogForm>
         }
         else {
-
             return <DialogForm title="Add New App"
                 isLoading={this.state.disableForm}
                 className=""
@@ -309,18 +299,14 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
                     </Select>
                 </div>
                 <TagLabelSelect
-                    validateTags={this.validateTags}
+                    validateTags={validateTags}
                     labelTags={this.state.labels}
                     onInputChange={this.handleInputChange}
                     onTagsChange={this.handleTagsChange}
                     onKeyDown={this.handleKeyDown}
                     onCreatableBlur={this.handleCreatableBlur}
                 />
-                {/* <span className="form__error">
-                    {showError && !this.state.isValid.appTag 
-                        ? <><Error className="form__icon form__icon--error" />{errorObject[2].message} <br /></>
-                        : null}
-                </span> */}
+
                 <div className="cr-5 fs-11">{this.state.labels.tagError}</div>
                 {this.state.form.cloneId > 0 && <div className="info__container info__container--create-app">
                     <Info />
@@ -332,7 +318,6 @@ export class AddNewApp extends Component<AddNewAppProps, AddNewAppState> {
                 <div className=" mt-40">
                     <DialogFormSubmit tabIndex={3}>{this.state.form.cloneId > 0 ? 'Duplicate App' : 'Create App'}</DialogFormSubmit>
                 </div>
-                {console.log(this.state.labels.tags)}
             </DialogForm >
         }
     }
