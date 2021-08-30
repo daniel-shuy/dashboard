@@ -14,7 +14,7 @@ import { getAppMetaInfo, createAppLabels } from '../service';
 import { toast } from 'react-toastify';
 import { OptionType } from '../types'
 import AboutAppInfoModal from './AboutAppInfoModal';
-import { validateTags, TAG_VALIDATION_MESSAGE, createOption } from '../appLabelCommon'
+import { validateTags, TAG_VALIDATION_MESSAGE, createOption, handleKeyDown } from '../appLabelCommon'
 import { ReactComponent as Settings } from '../../../assets/icons/ic-settings.svg';
 import { ReactComponent as Info } from '../../../assets/icons/ic-info-outlined.svg';
 
@@ -92,28 +92,6 @@ export function AppHeader() {
         }
     }, [appId])
 
-    const handleKeyDown = useCallback((event) => {
-        labelTags.inputTagValue = labelTags.inputTagValue.trim();
-        switch (event.key) {
-            case 'Enter':
-            case 'Tab':
-            case ',':
-            case ' ': // space
-                if (labelTags.inputTagValue) {
-                    let newTag = labelTags.inputTagValue.split(',').map((e) => { e = e.trim(); return createOption(e) });
-                    setLabelTags({
-                        inputTagValue: '',
-                        tags: [...labelTags.tags, ...newTag],
-                        tagError: '',
-                    });
-                }
-                if (event.key !== 'Tab') {
-                    event.preventDefault();
-                }
-                break;
-        }
-    }, [labelTags])
-
     function validateForm(): boolean {
         if (labelTags.tags.length !== labelTags.tags.map(tag => tag.value).filter(tag => validateTags(tag)).length) {
             setLabelTags(labelTags => ({ ...labelTags, tagError: TAG_VALIDATION_MESSAGE.error }))
@@ -150,10 +128,12 @@ export function AppHeader() {
         let _optionTypes = [];
         if (labelTags.tags && labelTags.tags.length > 0) {
             labelTags.tags.forEach((_label) => {
-                let _splittedTag = _label.value.split(':');
+                let colonIndex = _label.value.indexOf(':');
+                let splittedTagBeforeColon = _label.value.substring(0, colonIndex)
+                let splittedTagAfterColon = _label.value.substring(colonIndex + 1)
                 _optionTypes.push({
-                    key: _splittedTag[0],
-                    value: _splittedTag[1]
+                    key: splittedTagBeforeColon,
+                    value: splittedTagAfterColon
                 })
             })
         }
@@ -216,6 +196,13 @@ export function AppHeader() {
         [appId],
     );
 
+    let newTag = labelTags.inputTagValue.split(',').map((e) => { e = e.trim(); return createOption(e) });
+    const setAppTagLabel = () => setLabelTags({
+        inputTagValue: '',
+        tags: [...labelTags.tags, ...newTag],
+        tagError: '',
+    });
+
     return <div className="page-header" style={{ gridTemplateColumns: "unset" }}>
         <h1 className="m-0 fw-6 flex left fs-18 cn-9">
             <BreadCrumb breadcrumbs={breadcrumbs} />
@@ -234,7 +221,7 @@ export function AppHeader() {
                             labelTags={labelTags}
                             handleCreatableBlur={handleCreatableBlur}
                             handleInputChange={handleInputChange}
-                            handleKeyDown={handleKeyDown}
+                            handleKeyDown={(event) => handleKeyDown(labelTags, setAppTagLabel, event)}
                             handleSubmit={handleSubmit}
                             handleTagsChange={handleTagsChange}
                             submitting={submitting}
