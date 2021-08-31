@@ -15,7 +15,7 @@ import { withRouter, NavLink } from 'react-router-dom';
 import { getLastExecutionByArtifactAppEnv } from '../../../../services/service';
 import { ReactComponent as Error } from '../../../../assets/icons/ic-error-exclamation.svg';
 import { getHostURLConfiguration } from '../../../../services/service';
-
+import { getCIWebhookRes } from './ciWebhook.service'
 
 export const TriggerViewContext = createContext({
     invalidateCache: false,
@@ -52,6 +52,9 @@ class TriggerView extends Component<TriggerViewProps, TriggerViewState> {
             isLoading: false,
             invalidateCache: false,
             hostURLConfig: undefined,
+            showWebhookModal: false,
+            webhookPayloads: undefined,
+            isWebhookPayloadLoading: false
         }
         this.refreshMaterial = this.refreshMaterial.bind(this);
         this.onClickCIMaterial = this.onClickCIMaterial.bind(this);
@@ -367,9 +370,9 @@ class TriggerView extends Component<TriggerViewProps, TriggerViewState> {
                             Commit: element.commit,
                         }
                     }
-                    if(!element.commit){
+                    if (!element.commit) {
                         historyItem.GitCommit['WebhookData'] = {
-                           id: element.webhookData.id
+                            id: element.webhookData.id
                         }
                     }
                     return ciPipelineMaterials.push(historyItem);
@@ -408,9 +411,9 @@ class TriggerView extends Component<TriggerViewProps, TriggerViewState> {
                     node.inputMaterialList.map((material) => {
                         if (material.id == materialId && material.isSelected) {
                             material.history.map((hist) => {
-                                if(material.type == SourceTypeMap.WEBHOOK){
+                                if (material.type == SourceTypeMap.WEBHOOK) {
                                     hist.isSelected = hist.webhookData && hist.webhookData.id && hash == hist.webhookData.id;
-                                }else{
+                                } else {
                                     hist.isSelected = (hash == hist.commit)
                                 }
                             })
@@ -570,6 +573,23 @@ class TriggerView extends Component<TriggerViewProps, TriggerViewState> {
         this.setState({ showCDModal: false })
     }
 
+    hideWebhookModal = () => {
+        this.setState({
+            showWebhookModal: false
+        })
+    }
+    toggleWebhookModal = (id) => {
+        this.setState({isWebhookPayloadLoading : true})
+        getCIWebhookRes(id).then((result) => {
+            this.setState({
+                showWebhookModal: !this.state.showWebhookModal,
+                webhookPayloads: result?.result,
+                isWebhookPayloadLoading: false,
+            })
+        })
+    }
+
+
     renderCIMaterial = () => {
         if (this.state.ciNodeId && this.state.showCIModal) {
             let nd: NodeAttr;
@@ -587,6 +607,11 @@ class TriggerView extends Component<TriggerViewProps, TriggerViewState> {
                 isLoading={this.state.isLoading}
                 title={this.state.ciPipelineName}
                 pipelineId={this.state.ciNodeId}
+                showWebhookModal={this.state.showWebhookModal}
+                hideWebhookModal={this.hideWebhookModal}
+                toggleWebhookModal={this.toggleWebhookModal}
+                webhookPayloads={this.state.webhookPayloads}
+                isWebhookPayloadLoading={this.state.isWebhookPayloadLoading}
             />
         }
     }

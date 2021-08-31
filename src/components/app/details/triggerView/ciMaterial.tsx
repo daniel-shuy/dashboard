@@ -86,7 +86,7 @@ export class CIMaterial extends Component<CIMaterialProps> {
 
   renderCIModal(context) {
     let selectedMaterial = this.props.material.find(mat => mat.isSelected);
-    let commitInfo =  this.props.material.find((mat)=>mat.history);
+    let commitInfo = this.props.material.find((mat) => mat.history);
     let canTrigger = this.props.material.reduce((isValid, mat) => {
       isValid = isValid && !mat.isMaterialLoading && !!mat.history.find(history => history.isSelected);
       return isValid
@@ -102,9 +102,14 @@ export class CIMaterial extends Component<CIMaterialProps> {
             pipelineId={this.props.pipelineId}
             pipelineName={this.props.pipelineName}
             selectedMaterial={selectedMaterial}
+            showWebhookModal={this.props.showWebhookModal}
+            hideWebhookModal={this.props.hideWebhookModal}
+            toggleWebhookModal={this.props.toggleWebhookModal}
+            webhookPayloads={this.props.webhookPayloads}
+            isWebhookPayloadLoading={this.props.isWebhookPayloadLoading}
           />
         </div>
-        {this.renderMaterialStartBuild(context, canTrigger)}
+        {this.props.showWebhookModal ? null : this.renderMaterialStartBuild(context, canTrigger)}
       </>
     }
   }
@@ -114,12 +119,6 @@ export class CIMaterial extends Component<CIMaterialProps> {
       {(context) => {
         return <VisibleModal className="" close={context.closeCIModal}>
           <div className="modal-body--ci-material" onClick={(e) => { e.stopPropagation() }}>
-            <div className="trigger-modal__header">
-              <h1 className="modal__title">{this.props.title}</h1>
-              <button type="button" className="transparent" onClick={() => { context.closeCIModal() }}>
-                <Close className="" />
-              </button>
-            </div>
             {this.renderCIModal(context)}
           </div>
         </VisibleModal>
