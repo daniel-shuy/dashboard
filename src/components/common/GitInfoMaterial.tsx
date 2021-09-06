@@ -9,16 +9,16 @@ import { ReactComponent as Close } from '../../assets/icons/ic-close.svg';
 import { ReactComponent as Right } from '../../assets/icons/ic-arrow-left.svg';
 import Tippy from '@tippyjs/react';
 import { getWebhookEventsForEventId } from '../../services/service';
-import { showError } from './helpers/Helpers';
+import { showError, } from './helpers/Helpers';
+import { sortCallback } from '../common';
 
-export default function GitInfoMaterial({ context, material, title, pipelineId, pipelineName, selectedMaterial, commitInfo, showWebhookModal, toggleWebhookModal, webhookPayloads, isWebhookPayloadLoading, hideWebhookModal, workflowId }) {
+export default function GitInfoMaterial({ context, material, title, pipelineId, pipelineName, selectedMaterial, commitInfo, showWebhookModal, toggleWebhookModal, webhookPayloads, isWebhookPayloadLoading, hideWebhookModal, workflowId, onClickWebhookTimeStamp, webhhookTimeStampOrder }) {
 
     const [sourceValueAdv, setSourceValueAdv] = useState(material.type);
 
     function init() {
         material.map((ciMaterial) => {
             let sourceValueObj = JSON.parse(ciMaterial.value)
-            console.log(sourceValueObj)
             let eventId = sourceValueObj.eventId;
             let webhookCondition = sourceValueObj.condition;
 
@@ -40,6 +40,8 @@ export default function GitInfoMaterial({ context, material, title, pipelineId, 
     }, [])
 
     function buildHoverHtmlForWebhook(eventName, condition, selectors) {
+        // let webhookCondition = condition.sort((a, b) => sortCallback("selectorName", a, b))
+
         let _conditions = [];
         Object.keys(condition).forEach((_selectorId) => {
             let _selector = selectors.find(i => i.id == _selectorId);
@@ -141,8 +143,9 @@ export default function GitInfoMaterial({ context, material, title, pipelineId, 
                 ciMaterialId={material[0].id}
                 isWebhookPayloadLoading={isWebhookPayloadLoading}
                 hideWebhookModal={hideWebhookModal}
-                gitMaterialId={material.gitMaterialId}
                 workflowId={workflowId}
+                onClickWebhookTimeStamp={onClickWebhookTimeStamp}
+                webhhookTimeStampOrder={webhhookTimeStampOrder}
             />
         </div>
     }
