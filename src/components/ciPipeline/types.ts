@@ -53,7 +53,7 @@ export interface CIPipelineState {
         scanEnabled?: boolean,
         beforeDockerBuildScripts: { id: number; name: string, outputLocation: string; script: string, isCollapsed: boolean, index: number }[],
         afterDockerBuildScripts: { id: number; name: string, outputLocation: string; script: string, isCollapsed: boolean, index: number }[],
-        ciPipelineEditable : true
+        ciPipelineEditable : true;
     },
     ciPipeline: {
         id: number,

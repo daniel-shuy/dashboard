@@ -27,4 +27,16 @@ export class ValidationRules {
 
     }
 
+    stageName = (value: string): { message: string | null, isValid: boolean } => {
+        if (!value) return { message: `This is a required field`, isValid: false };
+
+        else if (value && value.length < 1) {
+            return { message: `This is a required field`, isValid: false }
+        }
+
+        else {
+            return { message: null, isValid: true }
+        }
+    }
+
 } 

@@ -80,6 +80,8 @@ export class CIPipelineAdvanced extends Component<CIPipelineAdvancedProps, {}> {
                     <img className="icon-dim-32 ml-auto" src={dropdown} alt="dropDown" style={{ "transform": this.props.showPostBuild ? "rotate(180deg)" : "rotate(0)" }} />}
             </div>
             {this.props.form[key].map((stage, index) => {
+                let errorObj = this.props.validationRules.stageName(stage.name);
+
                 if (showBuild && stage.isCollapsed) {
                     return <div key={`${key}-${index}-collapsed`} className="white-card white-card--add-new-item mt-16" onClick={(event) => { event.stopPropagation(); this.props.toggleCollapse(stage.id, index, key) }}>
                         <Page className="ci-file-icon" />
@@ -97,6 +99,13 @@ export class CIPipelineAdvanced extends Component<CIPipelineAdvancedProps, {}> {
                             <label className="form__row">
                                 <span className="form__label">Stage Name*</span>
                                 <input className="form__input" autoComplete="off" placeholder="Enter stage name" type="text" value={stage.name} onChange={(event) => this.props.handleChange(event, stage.id, key, index, 'name')} />
+                                {
+                                    this.props.showError && !errorObj.isValid &&
+                                    <span className="form__error">
+                                        <img src={error} className="form__icon" />
+                                        {this.props.validationRules?.stageName(stage.name).message}
+                                    </span>
+                                }
                             </label>
                             <label className="form__row">
                                 <span className="form__label">Script to execute*</span>
@@ -131,6 +140,13 @@ export class CIPipelineAdvanced extends Component<CIPipelineAdvancedProps, {}> {
                             <label className="form__row">
                                 <span className="form__label">Stage Name*</span>
                                 <input className="form__input" autoComplete="off" placeholder="Enter stage name" type="text" value={stage.name} onChange={(event) => this.props.handleChange(event, stage.id, key, index, 'name')} />
+                                {
+                                    this.props.showError && !errorObj.isValid &&
+                                    <span className="form__error">
+                                        <img src={error} className="form__icon" />
+                                        {this.props.validationRules?.stageName(stage.name).message}
+                                    </span>
+                                }
                             </label>
                             <label className="form__row">
                                 <span className="form__label">Script to execute*</span>

@@ -33,7 +33,7 @@ export default class CIPipeline extends Component<CIPipelineProps, CIPipelineSta
                 webhookEvents: [],
                 ciPipelineSourceTypeOptions: [],
                 webhookConditionList: [],
-                ciPipelineEditable: true
+                ciPipelineEditable: true,
             },
             ciPipeline: {
                 active: true,
@@ -189,15 +189,15 @@ export default class CIPipeline extends Component<CIPipelineProps, CIPipelineSta
             let _condition = {};
 
             // create initial data with fix values
-            if (_selectedWebhookEvent && _selectedWebhookEvent.selectors){
+            if (_selectedWebhookEvent && _selectedWebhookEvent.selectors) {
                 _selectedWebhookEvent.selectors.forEach((_selector) => {
-                    if(_selector.fixValue){
+                    if (_selector.fixValue) {
                         _condition[_selector.id] = _selector.fixValue;
                     }
                 })
             }
 
-            _material.value = JSON.stringify({ eventId: _selectedWebhookEvent.id, condition : _condition });
+            _material.value = JSON.stringify({ eventId: _selectedWebhookEvent.id, condition: _condition });
 
             // update condition list
             form.webhookConditionList = createWebhookConditionList(_material.value);
@@ -320,7 +320,7 @@ export default class CIPipeline extends Component<CIPipelineProps, CIPipelineSta
     }
 
     noop = () => { }
-    
+
     copyToClipboard(text: string, callback = this.noop): void {
         let textarea = document.createElement("textarea");
         let main = document.getElementsByClassName("main")[0];
@@ -334,12 +334,13 @@ export default class CIPipeline extends Component<CIPipelineProps, CIPipelineSta
 
     savePipeline() {
         let isUnique = this.checkUniqueness();
+        let key = 'beforeDockerBuildScripts';
         if (!isUnique) {
             toast.error("All Stage names must be unique");
             return;
         }
         this.setState({ showError: true, loadingData: true });
-        let errObj = this.validationRules.name(this.state.form.name);
+        let errObj = this.validationRules.name(this.state.form.name) && this.validationRules.stageName(this.state.form[key].name);
         let self = this;
         let valid = this.state.form.materials.reduce((isValid, mat) => {
             isValid = isValid && self.validationRules.sourceValue(mat.value).isValid;
@@ -543,7 +544,7 @@ export default class CIPipeline extends Component<CIPipelineProps, CIPipelineSta
     }
 
     render() {
-        let text = this.props.match.params.ciPipelineId ? "Update Pipeline" : "Create Pipeline";
+        let saveOrUpdate = this.props.match.params.ciPipelineId ? "Update Pipeline" : "Create Pipeline";
 
         return <VisibleModal className="" >
             <div className="modal__body modal__body--ci br-0 modal__body--p-0">
@@ -566,7 +567,7 @@ export default class CIPipeline extends Component<CIPipelineProps, CIPipelineSta
                                 loaderColor="white"
                                 onClick={this.savePipeline}
                                 isLoading={this.state.loadingData}>
-                                {text}
+                                {saveOrUpdate}
                             </ButtonWithLoader>
                         }
 
