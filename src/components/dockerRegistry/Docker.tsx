@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { showError, useForm, Select, Progressing, useAsync, sortCallback, CustomInput } from '../common';
+import { showError, useForm, Select, Progressing, useAsync, sortCallback, CustomInput, not } from '../common';
 import { getDockerRegistryList } from '../../services/service';
 import { saveRegistryConfig, updateRegistryConfig } from './service';
 import { List, ProtectedInput } from '../globalConfigurations/GlobalConfiguration'
@@ -7,7 +7,12 @@ import { toast } from 'react-toastify';
 import awsRegionList from '../common/awsRegionList.json'
 import { DOCUMENTATION } from '../../config';
 import Tippy from '@tippyjs/react';
+import { ReactComponent as Dropdown } from '../../assets/icons/ic-chevron-down.svg'
 import { ReactComponent as Question } from '../../assets/icons/ic-help-outline.svg';
+import { ReactComponent as Add } from '../../assets/icons/ic-add.svg';
+import { ReactComponent as Info } from '../../assets/icons/ic-info-outlined.svg';
+import { ReactComponent as Error } from '../../assets/icons/ic-warning.svg';
+import { types } from 'util';
 
 const DockerRegistryType = [
     { label: 'docker hub', value: 'docker-hub' },
@@ -36,27 +41,31 @@ export default function Docker({ ...props }) {
     </section>
 }
 
-function CollapsedList({ id = "", pluginId = null, registryUrl = "", registryType = "", awsAccessKeyId = "", awsSecretAccessKey = "", awsRegion = "", isDefault = false, active = true, username = "", password = "", reload, ...rest }) {
+function CollapsedList({ id = "", pluginId = null, registryUrl = "", registryType = "", awsAccessKeyId = "", awsSecretAccessKey = "", awsRegion = "", isDefault = false, active = true, username = "", password = "", reload, connection = "", cert = "", ...rest }) {
     const [collapsed, toggleCollapse] = useState(true)
     return (
-        <article className={`collapsed-list collapsed-list--docker collapsed-list--${id ? 'update' : 'create'}`}>
+        <article className={`collapsed-list collapsed-list--docker collapsed-list--${id ? 'update' : 'create dashed'}`}>
             <List onClick={e => toggleCollapse(t => !t)}>
-                <List.Logo> <div className={id ? "docker list__logo git-logo" : "add-icon"}></div></List.Logo>
+                {id ? <List.Logo> <div className="docker list__logo git-logo"></div></List.Logo>
+                    : <List.Logo><Add className="icon-dim-24 fcb-5 vertical-align-middle" /></List.Logo>}
+
                 <div className="flex left">
                     <List.Title title={id || 'Add docker registry'} subtitle={registryUrl} tag={isDefault ? 'DEFAULT' : ''} />
                 </div>
                 {id && <List.DropDown onClick={e => { e.stopPropagation(); toggleCollapse(t => !t) }} className="rotate" style={{ ['--rotateBy' as any]: `${Number(!collapsed) * 180}deg` }} />}
             </List>
-            {!collapsed && <DockerForm {...{ id, pluginId, registryUrl, registryType, awsAccessKeyId, awsSecretAccessKey, awsRegion, isDefault, active, username, password, reload, toggleCollapse }} />}
+            {!collapsed && <DockerForm {...{ id, pluginId, registryUrl, registryType, awsAccessKeyId, awsSecretAccessKey, awsRegion, isDefault, active, username, password, reload, toggleCollapse, connection, cert }} />}
         </article>
     )
 }
 
-function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, awsSecretAccessKey, awsRegion, isDefault, active, username, password, reload, toggleCollapse, ...rest }) {
+function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, awsSecretAccessKey, awsRegion, isDefault, active, username, password, reload, toggleCollapse, connection, cert, ...rest }) {
     const { state, disable, handleOnChange, handleOnSubmit } = useForm(
         {
             id: { value: id, error: "" },
             registryType: { value: registryType || 'ecr', error: "" },
+            advanceSelect: { value: connection || 'secure', error: "" },
+            certInput: { value: cert, error: "" }
         },
         {
             id: {
@@ -66,10 +75,16 @@ function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, a
             registryType: {
                 required: true,
                 validator: { error: 'Type is required', regex: /^.*$/ }
-            }
+            },
+            advanceSelect: {
+                required: true,
+                validator: { error: 'Mode is required', regex: /^.*$/ },
+            },
         }, onValidation);
     const [loading, toggleLoading] = useState(false)
     const [Isdefault, toggleDefault] = useState(isDefault)
+    const [optionCollapsed, setoptionCollapsed] = useState(false)
+    const [certError, setCertInputError] = useState('')
 
     let awsRegionMap = awsRegionList.reduce((agg, curr) => {
         agg.set(curr.value, curr.name)
@@ -89,6 +104,9 @@ function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, a
     }
 
     async function onValidation() {
+        console.log('test')
+        let name = 'shivani'
+        console.log(name)
         if (state.registryType.value === 'ecr') {
             if (!customState.awsRegion.value || !customState.awsAccessKeyId.value || !customState.awsSecretAccessKey.value || !customState.registryUrl.value) {
                 setCustomState(st => ({
@@ -112,6 +130,7 @@ function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, a
             }
         }
         else if (state.registryType.value === 'other') {
+            let error = false;
             if (!customState.username.value || !customState.password.value || !customState.registryUrl.value || !customState.registryUrl.value) {
                 setCustomState(st => ({
                     ...st,
@@ -119,6 +138,20 @@ function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, a
                     password: { ...st.password, error: st.password.value ? '' : 'Mandatory' },
                     registryUrl: { ...st.registryUrl, error: st.registryUrl.value ? '' : 'Mandatory' },
                 }))
+                error = true
+            }
+            if (state.advanceSelect.value === "secure-with-cert") {
+                if (state.certInput.value === "") {
+                    if (!optionCollapsed) {
+                        setoptionCollapsed(not)
+                    }
+                    setCertInputError('Mandatory')
+                    error = true
+                } else {
+                    setCertInputError('')
+                }
+            }
+            if (error) {
                 return
             }
         }
@@ -131,7 +164,7 @@ function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, a
             registryUrl: customState.registryUrl.value,
             ...(state.registryType.value === 'ecr' ? { awsAccessKeyId: customState.awsAccessKeyId.value, awsSecretAccessKey: customState.awsSecretAccessKey.value, awsRegion: customState.awsRegion.value } : {}),
             ...(state.registryType.value === 'docker-hub' ? { username: customState.username.value, password: customState.password.value, } : {}),
-            ...(state.registryType.value === 'other' ? { username: customState.username.value, password: customState.password.value } : {}),
+            ...(state.registryType.value === 'other' ? { username: customState.username.value, password: customState.password.value, connection: state.advanceSelect.value, cert: state.certInput.value } : {}),
         }
 
         const api = id ? updateRegistryConfig : saveRegistryConfig
@@ -151,6 +184,7 @@ function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, a
     }
 
     let selectedDckerRegistryType = DockerRegistryType.find(type => type.value === state.registryType.value);
+    let advanceRegistryOptions = [{ label: 'Allow only secure connection', value: 'secure', tippy: '' }, { label: 'Allow secure connection with CA certificate', value: 'secure-with-cert', tippy: 'Use to verify self-signed TLS Certificate' }, { label: 'Allow insecure connection', value: 'insecure', tippy: 'This will enable insecure registry communication' }];
     return (
         <form onSubmit={handleOnSubmit} className="docker-form" autoComplete="off">
             <div className="form__row">
@@ -203,6 +237,40 @@ function DockerForm({ id, pluginId, registryUrl, registryType, awsAccessKeyId, a
                     <ProtectedInput name="password" tabIndex={6} value={customState.password.value} error={customState.password.error} onChange={customHandleChange} label="Password*" type="password" />
                 </div>
             </>}
+            {state.registryType.value === 'other' &&
+                <hr className="cn-1 bcn-1 en-1" style={{ height: .5 }} />}
+            {state.registryType.value === 'other' &&
+                <div className={`form__buttons flex left ${optionCollapsed ? '' : 'mb-22'}`}>
+                    <Dropdown
+                        onClick={(e) => setoptionCollapsed(not)}
+                        className="rotate icon-dim-18 pointer fcn-6"
+                        style={{ ['--rotateBy' as any]: !optionCollapsed ? '-90deg' : '0deg' }}
+                    />
+                    <label className="fs-13 mb-0 ml-8 pointer" onClick={(e) => setoptionCollapsed(not)}>Advanced Registry URL connection options</label>
+                    <a target="_blank" href="https://docs.docker.com/registry/insecure/"><Info className="icon-dim-16 ml-4 mt-5" /></a>
+                </div>}
+            {optionCollapsed &&
+                <div className="form__row ml-3" style={{ width: '100%' }}>
+                    {advanceRegistryOptions.map(({ label: Lable, value, tippy }) => <div> <label key={value} className={`flex left pointer secureFont workflow-node__text-light ${value != 'secure' ? 'mt-20' : 'mt-18'}`}>
+                        <input type="radio" name="advanceSelect" value={value} onChange={handleOnChange} checked={value === state.advanceSelect.value} /><span className="ml-10 fs-13">
+                            {Lable}</span>
+                        {value != "secure" &&
+                            <Tippy className="default-tt ml-10" arrow={false} placement="top" content={
+                                <span style={{ display: "block", width: "160px" }}>{tippy}</span>}>
+                                <Question className="icon-dim-16 ml-4" />
+                            </Tippy>}
+                    </label>
+                        {value == "secure-with-cert" && state.advanceSelect.value == "secure-with-cert" &&
+                            <div className="ml-20">
+                                <textarea name="certInput" placeholder="Begins with -----BEGIN CERTIFICATE-----" className="form__input" style={{ height: "100px", backgroundColor: "#f7fafc" }} onChange={handleOnChange} value={state.certInput.value} />
+                                {certError && <div className="form__error">
+                                    <Error className="form__icon form__icon--error" />
+                                    {certError}
+                                </div>}
+                            </div>
+                        }
+                    </div>)}
+                </div>}
             <div className="form__row form__buttons  ">
                 <label htmlFor="" className="docker-default flex" onClick={isDefault ? () => { toast.success('Please mark another as default.') } : e => toggleDefault(t => !t)}>
                     <input type="checkbox" name="default" checked={Isdefault} onChange={e => { }} />
