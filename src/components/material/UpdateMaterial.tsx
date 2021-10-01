@@ -28,6 +28,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
                 url: this.props.material.url,
                 checkoutPath: this.props.material.checkoutPath,
                 active: this.props.material.active,
+                isSubmodulesfetched: false,
             },
             isCollapsed: true,
             isChecked: true,
@@ -44,9 +45,10 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
         this.toggleCollapse = this.toggleCollapse.bind(this);
         this.save = this.save.bind(this);
         this.cancel = this.cancel.bind(this);
-        this.handleCheckbox = this.handleCheckbox.bind(this);
+        this.handleCheckoutPathCheckbox = this.handleCheckoutPathCheckbox.bind(this);
 
     }
+    
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.material.gitProvider.id != this.props.material.gitProvider.id || prevProps.material.url != this.props.material.url || prevProps.material.checkoutPath != this.props.material.checkoutPath) {
@@ -58,6 +60,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
                     url: this.props.material.url,
                     active: this.props.material.active,
                     checkoutPath: this.props.material.checkoutPath,
+                    isSubmodulesfetched: this.props.material.isSubmodulesfetched
                 },
                 isCollapsed: true,
                 isLoading: false,
@@ -65,9 +68,18 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
         }
     }
 
-    handleCheckbox(event): void {
+    handleCheckoutPathCheckbox(event): void {
         this.setState({
             isChecked: !this.state.isChecked
+        });
+    }
+
+     handleSubmoduleCheckbox = (event): void => {
+        this.setState({
+            material:{
+                ...this.state.material,
+                isSubmodulesfetched: !this.state.material.isSubmodulesfetched
+            }
         });
     }
 
@@ -134,6 +146,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
                     url: this.state.material.url,
                     checkoutPath: this.state.material.checkoutPath,
                     gitProviderId: this.state.material.gitProvider.id,
+                    fetchSubmodules: this.state.material.isSubmodulesfetched ? true : false
                 }
             }
             updateMaterial(payload).then((response) => {
@@ -145,6 +158,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
                 this.setState({ isLoading: false })
             })
         })
+        console.log(this.state.material.isSubmodulesfetched)
     }
 
     cancel(event) {
@@ -174,7 +188,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
             isLoading={this.state.isLoading}
             isMultiGit={this.props.isMultiGit}
             providers={this.props.providers}
-            handleCheckbox= {this.handleCheckbox}
+            handleCheckoutPathCheckbox= {this.handleCheckoutPathCheckbox}
             handleProviderChange={this.handleProviderChange}
             handleUrlChange={this.handleUrlChange}
             handlePathChange={this.handlePathChange}
@@ -182,6 +196,9 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
             save={this.save}
             cancel={this.cancel}
             isWorkflowEditorUnlocked={this.props.isWorkflowEditorUnlocked}
+            handleSubmoduleCheckbox= {this.handleSubmoduleCheckbox}
+            isSubmodulesfetched= {this.state.material.isSubmodulesfetched}
+
         />
     }
 }

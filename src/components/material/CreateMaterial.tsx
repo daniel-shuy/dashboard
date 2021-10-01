@@ -27,6 +27,7 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                 url: '',
                 checkoutPath: "",
                 active: true,
+                isSubmodulesfetched: false,
             },
             isCollapsed: this.props.isMultiGit ? true : false,
             isChecked: false,
@@ -45,13 +46,24 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
         this.toggleCollapse = this.toggleCollapse.bind(this);
         this.save = this.save.bind(this);
         this.cancel = this.cancel.bind(this);
-        this.handleCheckbox = this.handleCheckbox.bind(this);
+        this.handleCheckoutPathCheckbox = this.handleCheckoutPathCheckbox.bind(this);
+        this.handleSubmoduleCheckbox = this.handleSubmoduleCheckbox.bind(this);
+
 
     }
 
-    handleCheckbox(event): void {
+    handleCheckoutPathCheckbox(event): void {
         this.setState({
             isChecked: !this.state.isChecked
+        });
+    }
+
+    handleSubmoduleCheckbox(event): void {
+        this.setState({
+            material:{
+                ...this.state.material,
+                isSubmodulesfetched: !this.state.material.isSubmodulesfetched
+            }
         });
     }
 
@@ -122,9 +134,11 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                     url: this.state.material.url,
                     checkoutPath: this.state.material.checkoutPath,
                     gitProviderId: this.state.material.gitProvider.id,
+                    fetchSubmodules: this.state.material.isSubmodulesfetched ? "true" : "false"
                 }]
             }
             createMaterial(payload).then((response) => {
+                console.log(response)
                 this.props.refreshMaterials();
                 toast.success("Material Saved Successfully");
             }).catch((error) => {
@@ -134,6 +148,7 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
             })
         })
     }
+   
 
     cancel(event): void {
         this.setState({
@@ -141,7 +156,8 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                 gitProvider: undefined,
                 url: '',
                 checkoutPath: '',
-                active: true
+                active: true,
+                isSubmodulesfetched: undefined
             },
             isCollapsed: true,
             isLoading: false,
@@ -195,7 +211,8 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                 isChecked={this.state.isChecked}
                 material={this.state.material}
                 isCollapsed={this.state.isCollapsed}
-                handleCheckbox={this.handleCheckbox}
+                handleCheckoutPathCheckbox={this.handleCheckoutPathCheckbox}
+                handleSubmoduleCheckbox={this.handleSubmoduleCheckbox}
                 isLoading={this.state.isLoading}
                 isError={this.state.isError}
                 providers={this.props.providers}
@@ -206,6 +223,7 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                 save={this.handleSaveButton}
                 cancel={this.cancel}
                 isWorkflowEditorUnlocked={this.props.isWorkflowEditorUnlocked}
+                isSubmodulesfetched= {this.state.material.isSubmodulesfetched}
             />
             {this.state.showSaveModal && this.renderSavePopupModal()}
         </>
