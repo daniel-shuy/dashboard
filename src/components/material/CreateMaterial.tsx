@@ -12,7 +12,6 @@ interface CreateMaterialProps {
     providers: any[];
     refreshMaterials: () => void;
     isGitProviderValid;
-    isGitUrlValid;
     isCheckoutPathValid;
     isWorkflowEditorUnlocked: boolean;
 }
@@ -27,7 +26,7 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                 url: '',
                 checkoutPath: "",
                 active: true,
-                isSubmodulesfetched: false,
+                fetchSubmodules: false,
             },
             isCollapsed: this.props.isMultiGit ? true : false,
             isChecked: false,
@@ -62,7 +61,7 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
         this.setState({
             material:{
                 ...this.state.material,
-                isSubmodulesfetched: !this.state.material.isSubmodulesfetched
+                fetchSubmodules: !this.state.material.fetchSubmodules
             }
         });
     }
@@ -93,6 +92,19 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
         });
     }
 
+    isGitUrlValid(url: string): string | undefined {
+        if (!url.length) return "This is a required field"
+        
+        const res = this.props.providers?.filter((provider)=>provider?.id === this.state.material?.gitProvider?.id )
+        if(res[0]?.authMode != "SSH" ){
+            if(!url.startsWith("https")) return "Git Repo URL must start with 'https:'";
+        }
+        if(res[0]?.authMode === "SSH" ){
+            if(!url.startsWith("git@")) return "Git Repo URL must start with 'git@'";
+        }
+        return undefined;
+    }
+
     handleUrlChange(event) {
         this.setState({
             material: {
@@ -101,10 +113,11 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
             },
             isError: {
                 ...this.state.isError,
-                url: this.props.isGitUrlValid(event.target.value)
+                url: this.isGitUrlValid(event.target.value)
             }
         });
     }
+
 
     toggleCollapse(event) {
         this.setState({
@@ -118,7 +131,7 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
             showSaveModal: false,
             isError: {
                 gitProvider: this.props.isGitProviderValid(this.state.material.gitProvider),
-                url: this.props.isGitUrlValid(this.state.material.url),
+                url: this.isGitUrlValid(this.state.material.url),
                 checkoutPath: this.props.isCheckoutPathValid(this.state.material.checkoutPath)
             }
 
@@ -134,7 +147,7 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                     url: this.state.material.url,
                     checkoutPath: this.state.material.checkoutPath,
                     gitProviderId: this.state.material.gitProvider.id,
-                    fetchSubmodules: this.state.material.isSubmodulesfetched ? "true" : "false"
+                    fetchSubmodules: this.state.material.fetchSubmodules
                 }]
             }
             createMaterial(payload).then((response) => {
@@ -157,7 +170,7 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                 url: '',
                 checkoutPath: '',
                 active: true,
-                isSubmodulesfetched: undefined
+                fetchSubmodules: undefined
             },
             isCollapsed: true,
             isLoading: false,
@@ -223,7 +236,6 @@ export class CreateMaterial extends Component<CreateMaterialProps, CreateMateria
                 save={this.handleSaveButton}
                 cancel={this.cancel}
                 isWorkflowEditorUnlocked={this.props.isWorkflowEditorUnlocked}
-                isSubmodulesfetched= {this.state.material.isSubmodulesfetched}
             />
             {this.state.showSaveModal && this.renderSavePopupModal()}
         </>

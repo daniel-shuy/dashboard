@@ -42,7 +42,7 @@ export class MaterialView extends Component<MaterialViewProps, {}> {
 
     gitAuthType = () => {
            const res = this.props.providers?.filter((provider)=>provider?.id === this.props.material?.gitProvider?.id )
-         return res[0]?.authMode == "SSH_KEYS" ? "ssh" : "https"
+         return res[0]?.authMode == "SSH" ? "ssh" : "https"
     }
 
     renderForm() {
@@ -174,7 +174,7 @@ export class MaterialView extends Component<MaterialViewProps, {}> {
                     {this.props.isError.checkoutPath && <> <img src={error} className="form__icon" /> {this.props.isError.checkoutPath}</>}
                 </span>
                 <Checkbox
-                    isChecked={this.props.isSubmodulesfetched}
+                    isChecked={this.props.material.fetchSubmodules}
                     value={"CHECKED"}
                     tabIndex={3}
                     onChange={this.props.handleSubmoduleCheckbox}

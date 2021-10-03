@@ -11,7 +11,6 @@ interface UpdateMaterialProps {
     material: GitMaterialType;
     providers: any[];
     isGitProviderValid;
-    isGitUrlValid;
     isCheckoutPathValid;
     refreshMaterials: () => void;
     isWorkflowEditorUnlocked: boolean;
@@ -28,7 +27,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
                 url: this.props.material.url,
                 checkoutPath: this.props.material.checkoutPath,
                 active: this.props.material.active,
-                isSubmodulesfetched: false,
+                fetchSubmodules: this.props.material.fetchSubmodules,
             },
             isCollapsed: true,
             isChecked: true,
@@ -60,12 +59,26 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
                     url: this.props.material.url,
                     active: this.props.material.active,
                     checkoutPath: this.props.material.checkoutPath,
-                    isSubmodulesfetched: this.props.material.isSubmodulesfetched
+                    fetchSubmodules: this.props.material.fetchSubmodules
                 },
                 isCollapsed: true,
                 isLoading: false,
             })
         }
+    }
+   
+
+    isGitUrlValid(url: string): string | undefined {
+        if (!url.length) return "This is a required field"
+        
+        const res = this.props.providers?.filter((provider)=>provider?.id === this.state.material?.gitProvider?.id )
+        if(res[0]?.authMode != "SSH" ){
+            if(!url.startsWith("https")) return "Git Repo URL must start with 'https:'";
+        }
+        if(res[0]?.authMode === "SSH" ){
+            if(!url.startsWith("git@")) return "Git Repo URL must start with 'git@'";
+        }
+        return undefined;
     }
 
     handleCheckoutPathCheckbox(event): void {
@@ -78,7 +91,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
         this.setState({
             material:{
                 ...this.state.material,
-                isSubmodulesfetched: !this.state.material.isSubmodulesfetched
+                fetchSubmodules: !this.state.material.fetchSubmodules
             }
         });
     }
@@ -117,7 +130,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
             },
             isError: {
                 ...this.state.isError,
-                url: this.props.isGitUrlValid(event.target.value)
+                url: this.isGitUrlValid(event.target.value)
             }
         });
     }
@@ -132,7 +145,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
         this.setState({
             isError: {
                 gitProvider: this.props.isGitProviderValid(this.state.material.gitProvider),
-                url: this.props.isGitUrlValid(this.state.material.url),
+                url: this.isGitUrlValid(this.state.material.url),
                 checkoutPath: this.props.isCheckoutPathValid(this.state.material.checkoutPath)
             }
         }, () => {
@@ -146,7 +159,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
                     url: this.state.material.url,
                     checkoutPath: this.state.material.checkoutPath,
                     gitProviderId: this.state.material.gitProvider.id,
-                    fetchSubmodules: this.state.material.isSubmodulesfetched ? true : false
+                    fetchSubmodules: this.state.material.fetchSubmodules ? true : false
                 }
             }
             updateMaterial(payload).then((response) => {
@@ -158,7 +171,6 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
                 this.setState({ isLoading: false })
             })
         })
-        console.log(this.state.material.isSubmodulesfetched)
     }
 
     cancel(event) {
@@ -173,7 +185,7 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
             isLoading: false,
             isError: {
                 gitProvider: this.props.isGitProviderValid(this.props.material.gitProvider),
-                url: this.props.isGitUrlValid(this.props.material.url),
+                url: this.isGitUrlValid(this.props.material.url),
                 checkoutPath: this.props.isCheckoutPathValid(this.props.material.checkoutPath)
             }
         });
@@ -197,7 +209,6 @@ export class UpdateMaterial extends Component<UpdateMaterialProps, UpdateMateria
             cancel={this.cancel}
             isWorkflowEditorUnlocked={this.props.isWorkflowEditorUnlocked}
             handleSubmoduleCheckbox= {this.handleSubmoduleCheckbox}
-            isSubmodulesfetched= {this.state.material.isSubmodulesfetched}
 
         />
     }
